@@ -1,0 +1,27 @@
+nodered.wlodev.com {
+	# Node-red configuration
+	handle "/admin*" {
+		reverse_proxy localhost:1880
+	}
+
+	# Auth routes separated from node-red-dashboard
+	handle "/auth*" {
+		reverse_proxy localhost:1880
+	}
+
+	# Serve node-red-dashboard on root path
+	handle_path "/dashboard*" {
+		redir * {uri}
+	}
+
+	# Handle root path to homepage
+	handle "/" {
+		redir * /parametry
+	}
+
+	# Serve any other path to node-red-dashboard
+	handle {
+		rewrite * /dashboard{uri}
+		reverse_proxy localhost:1880
+	}
+}
