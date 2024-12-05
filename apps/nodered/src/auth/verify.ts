@@ -10,18 +10,25 @@ if (!process.env.AWS_COGNITO_CLIENT_ID) {
     throw new Error('AWS_COGNITO_CLIENT_ID env missing')
 }
 
-export const verifyJWT = async (
-    cookieStr: string | undefined
-): Promise<jwt.JwtPayload | null> => {
-    const cookies = cookie.parse(cookieStr || '')
-    const idToken = cookies.idToken
-    if (!idToken) {
+export const verifyJWT = async ({
+    cookieStr,
+    idToken,
+}: {
+    cookieStr?: string
+    idToken?: string
+}): Promise<jwt.JwtPayload | null> => {
+    const parsedIdToken = idToken
+        ? idToken
+        : cookieStr
+          ? cookie.parse(cookieStr).idToken
+          : null
+    if (!parsedIdToken) {
         return null
     }
 
     const jwtPayload = await new Promise(resolve => {
         jwt.verify(
-            idToken,
+            parsedIdToken,
             getKey,
             {
                 algorithms: ['RS256'],

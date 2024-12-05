@@ -8,7 +8,7 @@ import {
     CognitoUserAttribute,
     CognitoUserPool,
 } from 'amazon-cognito-identity-js'
-import { HOME_PATH } from '../utils'
+import { getCookieOpts, HOME_PATH } from '../utils'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -30,7 +30,7 @@ const userPool = new CognitoUserPool({
 })
 
 authRoutes.get('/login', async (req, res) => {
-    if (await verifyJWT(req.headers.cookie)) {
+    if (await verifyJWT({ cookieStr: req.headers.cookie })) {
         res.redirect(303, HOME_PATH)
         return
     }
@@ -39,7 +39,11 @@ authRoutes.get('/login', async (req, res) => {
 })
 
 authRoutes.post('/login', async (req, res) => {
-    if (await verifyJWT(req.headers.cookie)) {
+    if (
+        await verifyJWT({
+            cookieStr: req.headers.cookie,
+        })
+    ) {
         res.status(400).json({
             error: 'already_logged_in',
         })
@@ -73,22 +77,16 @@ authRoutes.post('/login', async (req, res) => {
                 return
             }
 
-            const cookieOpts: CookieOptions = {
-                httpOnly: true,
-                secure: req.secure,
-                path: '/',
-                sameSite: 'lax',
-            }
             res.cookie('idToken', result.getIdToken().getJwtToken(), {
-                ...cookieOpts,
+                ...getCookieOpts(req),
                 maxAge: 60 * 60 * 1000,
             })
             res.cookie('accessToken', result.getAccessToken().getJwtToken(), {
-                ...cookieOpts,
+                ...getCookieOpts(req),
                 maxAge: 60 * 60 * 1000,
             })
             res.cookie('refreshToken', result.getRefreshToken().getToken(), {
-                ...cookieOpts,
+                ...getCookieOpts(req),
                 maxAge: 60 * 60 * 24 * 60 * 1000,
             })
 
@@ -108,7 +106,11 @@ authRoutes.post('/login', async (req, res) => {
 })
 
 authRoutes.get('/signup', async (req, res) => {
-    if (await verifyJWT(req.headers.cookie)) {
+    if (
+        await verifyJWT({
+            cookieStr: req.headers.cookie,
+        })
+    ) {
         res.redirect(303, HOME_PATH)
         return
     }
@@ -117,7 +119,11 @@ authRoutes.get('/signup', async (req, res) => {
 })
 
 authRoutes.post('/signup', async (req, res) => {
-    if (await verifyJWT(req.headers.cookie)) {
+    if (
+        await verifyJWT({
+            cookieStr: req.headers.cookie,
+        })
+    ) {
         res.status(400).json({
             error: 'already_logged_in',
         })
@@ -167,20 +173,25 @@ authRoutes.post('/signup', async (req, res) => {
     return
 })
 
+const expireCookieOpts: CookieOptions = {
+    maxAge: 0,
+}
+
 authRoutes.get('/logout', async (req, res) => {
-    if (!(await verifyJWT(req.headers.cookie))) {
+    if (
+        !(await verifyJWT({
+            cookieStr: req.headers.cookie,
+        }))
+    ) {
         res.redirect(303, '/auth/login')
         return
     }
 
     // TODO: Revoke refresh token
-    const cookieOpts: CookieOptions = {
-        maxAge: 0,
-    }
 
-    res.cookie('idToken', '', cookieOpts)
-    res.cookie('accessToken', '', cookieOpts)
-    res.cookie('refreshToken', '', cookieOpts)
+    res.cookie('idToken', '', expireCookieOpts)
+    res.cookie('accessToken', '', expireCookieOpts)
+    res.cookie('refreshToken', '', expireCookieOpts)
 
     res.redirect(303, '/auth/login')
 })
