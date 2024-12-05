@@ -14,7 +14,7 @@ const server = http.createServer(app)
 // Initialise the runtime with a server and settings
 RED.init(server, settings)
 
-app.use('/', express.static('public'))
+app.use('/public', express.static('public'))
 app.use('/auth', bodyParser.json(), authRoutes)
 
 // ! Crucial
@@ -33,7 +33,14 @@ app.use((req, res, next) => {
 })
 
 // Guard all of the routes
-app.use(isAuthenticated)
+app.use((req, res, next) => {
+    if (trimPrefix(req.path, '/dashboard').startsWith('/public')) {
+        next()
+        return
+    }
+
+    return isAuthenticated(req, res, next)
+})
 
 // Serve the editor UI from /red
 app.use(settings.httpAdminRoot as string, RED.httpAdmin)
