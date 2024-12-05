@@ -1,0 +1,16 @@
+{
+    "name": "node-red-cognito",
+    "description": "AWS Cognito adapater to signup and authenticate users",
+    "version": "1.0.0",
+    "main": "plugin.js",
+    "node-red": {
+        "plugins": {
+            "node-red-dashboard-2-cognito-auth": "plugin.js"
+        }
+    },
+    "author": {
+        "name": "wloodar",
+        "url": "https://github.com/wloodar"
+    },
+    "license": "ISC"
+}
