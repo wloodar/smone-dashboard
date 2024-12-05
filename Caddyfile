@@ -9,6 +9,11 @@ nodered.wlodev.com {
 		reverse_proxy localhost:1880
 	}
 
+	# Forward requests to static files
+	handle "/public*" {
+		reverse_proxy localhost:1880
+	}
+
 	# Serve node-red-dashboard on root path
 	handle_path "/dashboard*" {
 		redir * {uri}
